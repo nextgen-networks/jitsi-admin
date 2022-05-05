@@ -51,7 +51,7 @@ class UserBase implements UserInterface
     /**
      * @return string
      */
-    public function getUserIdentifier()
+    public function getUserIdentifier() :string
     {
         return $this->uuid;
     }

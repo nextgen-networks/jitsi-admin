@@ -25,26 +25,28 @@ class LoginController extends JitsiAdminController
      */
     public function check(ClientRegistry $clientRegistry, Request $request)
     {
-        // ** if you want to *authenticate* the user, then
-        // leave this method blank and create a Guard authenticator
-        // (read below)
 
-        /** @var Auth0Client $client */
-        $client = $clientRegistry->getClient('auth0_main');
 
-        try {
-
-            $user = $client->fetchUser();
-
-            // do something with all this new power!
-            // e.g. $name = $user->getFirstName();
-            die;
-            // ...
-        } catch (IdentityProviderException $e) {
-            // something went wrong!
-            // probably you should return the reason to the user
-            die;
-        }
+//        // ** if you want to *authenticate* the user, then
+//        // leave this method blank and create a Guard authenticator
+//        // (read below)
+//
+//        /** @var Auth0Client $client */
+//        $client = $clientRegistry->getClient('auth0_main');
+//
+//        try {
+//
+//            $user = $client->fetchUser();
+//
+//            // do something with all this new power!
+//            // e.g. $name = $user->getFirstName();
+//            die;
+//            // ...
+//        } catch (IdentityProviderException $e) {
+//            // something went wrong!
+//            // probably you should return the reason to the user
+//            die;
+//        }
     }
     /**
      * @Route("/logout_keycloak", name="logout_keycloak")

@@ -1,4 +1,5 @@
 security:
+    enable_authenticator_manager: true
     password_hashers:
         App\Entity\User:
             algorithm: auto
@@ -23,14 +24,12 @@ security:
             security: false
         main:
             pattern: ^/
-            anonymous:    true
-            switch_user: true
             logout:
                 path:   app_logout
                 target: logout_keycloak
-            guard:
-                authenticators:
-                    - App\Security\GuardServiceKeycloak
+
+            custom_authenticators:
+                - App\Security\GuardServiceKeycloak
 
 
     # Easy way to control access for large sections of your site

@@ -10,8 +10,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -60,7 +62,18 @@ class StartMeetingService
      */
     private $logger;
     private FlashBagInterface $flashBag;
-    public function __construct(FlashBagInterface $flashBag, LoggerInterface $logger, ToModeratorWebsocketService $toModeratorWebsocketService, Environment $environment, RoomService $roomService, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, ParameterBagInterface $parameterBag, TranslatorInterface $translator)
+
+
+    public function __construct(
+
+        RequestStack                $requestStack,
+        LoggerInterface             $logger,
+        ToModeratorWebsocketService $toModeratorWebsocketService,
+        Environment                 $environment, RoomService $roomService,
+        EntityManagerInterface      $entityManager,
+        UrlGeneratorInterface       $urlGenerator,
+        ParameterBagInterface       $parameterBag,
+        TranslatorInterface         $translator)
     {
         $this->roomService = $roomService;
         $this->em = $entityManager;
@@ -71,7 +84,9 @@ class StartMeetingService
         $this->toModerator = $toModeratorWebsocketService;
         $this->logger = $logger;
         $this->lobbyUser = null;
-        $this->flashBag = $flashBag;
+
+        $this->flashBag = $requestStack->getCurrentRequest()->getSession()->;
+
     }
 
     /**
@@ -85,7 +100,8 @@ class StartMeetingService
      * this function checks if the meeting is already started or if it is too late or to early
      * This function checks if the room has the lobby function activated
      */
-    public function startMeeting(?Rooms $room, User $user, $t, $name)
+    public
+    function startMeeting(?Rooms $room, User $user, $t, $name)
     {
         $this->room = $room;
         $this->user = $user;
@@ -107,7 +123,8 @@ class StartMeetingService
         return $this->roomNotFound();
     }
 
-    public function setAttribute(Rooms $rooms, ?User $user, $t, $name)
+    public
+    function setAttribute(Rooms $rooms, ?User $user, $t, $name)
     {
         $this->room = $rooms;
         $this->user = $user;
@@ -122,7 +139,8 @@ class StartMeetingService
      * @throws \Twig\Error\SyntaxError
      * this function generates a page if the lobby is activated
      */
-    private function generateLobby()
+    private
+    function generateLobby()
     {
         if ($this->user === $this->room->getModerator() || $this->user->getPermissionForRoom($this->room)->getLobbyModerator()) {
             return $this->lobbyModerator();
@@ -139,18 +157,21 @@ class StartMeetingService
      * @throws \Twig\Error\SyntaxError
      *  this function generates the page for the lobby moderator
      */
-    public function lobbyModerator()
+    public
+    function lobbyModerator()
     {
         if ($this->room->getModerator() === $this->user || $this->user->getPermissionForRoom($this->room)->getLobbyModerator() === true) {
             return $this->createLobbyModeratorResponse();
         }
 
         $this->logger->log('error', 'User trys to enter Lobby which he is no moderator of', array('room' => $this->room->getId(), 'user' => $this->user->getUserIdentifier()));
+
         $this->flashBag->add('danger', $this->translator->trans('error.noPermission'));
         return $this->urlGen->generate('dashboard');
     }
 
-    public function createLobbyModeratorResponse()
+    public
+    function createLobbyModeratorResponse()
     {
         return new Response($this->twig->render('lobby/index.html.twig', [
             'room' => $this->room,
@@ -169,12 +190,13 @@ class StartMeetingService
      * @throws \Twig\Error\SyntaxError
      * this function generates the page for the participant
      */
-    public function createLobbyParticipantResponse($wuid = null)
+    public
+    function createLobbyParticipantResponse($wuid = null)
     {
         $lobbyUser = $this->em->getRepository(LobbyWaitungUser::class)->findOneBy(array('user' => $this->user, 'room' => $this->room));
-        if($wuid){
+        if ($wuid) {
             $lobbyUser = $this->em->getRepository(LobbyWaitungUser::class)->findOneBy(array('uid' => $wuid));
-            if ($lobbyUser){
+            if ($lobbyUser) {
                 $this->user = 1;
             }
 
@@ -208,7 +230,8 @@ class StartMeetingService
      * this function generates tthe redirect respnse when the room is closed.
      * So it is to early or to late to enter the room
      */
-    private function RoomClosed()
+    private
+    function RoomClosed()
     {
         $this->flashBag->add('danger', $this->translator->trans('Der Beitritt ist nur von {from} bis {to} möglich',
             array(
@@ -223,9 +246,10 @@ class StartMeetingService
      * @return RedirectResponse
      * this function redirect to the dashboard when the room is not avalable. this can happens when the user is not a participent or the romm is not available
      */
-    private function roomNotFound()
+    private
+    function roomNotFound()
     {
-        $this->flashBag->add('danger',  $this->translator->trans('Konferenz nicht gefunden. Zugangsdaten erneut eingeben'));
+        $this->flashBag->add('danger', $this->translator->trans('Konferenz nicht gefunden. Zugangsdaten erneut eingeben'));
         return new RedirectResponse($this->urlGen->generate('dashboard'));
     }
 
@@ -236,7 +260,8 @@ class StartMeetingService
      * @throws \Twig\Error\SyntaxError
      * this function genereats a redirect to the meeting app or generate an iframe to load the jitsi window
      */
-    public function roomDefault()
+    public
+    function roomDefault()
     {
         if ($this->type === 'a') {
             $this->url = $this->roomService->join($this->room, $this->user, $this->type, $this->name);
@@ -268,7 +293,7 @@ class StartMeetingService
     /**
      * @return null
      */
-    public function getLobbyUser():?LobbyWaitungUser
+    public function getLobbyUser(): ?LobbyWaitungUser
     {
         return $this->lobbyUser;
     }
