@@ -17,10 +17,10 @@
     "license": "UNLICENSED",
     "private": true,
     "scripts": {
-        "dev-server": "encore dev-server",
-        "dev": "encore dev",
-        "watch": "encore dev --watch",
-        "build": "encore production --progress",
+        "dev-server": "set NODE_OPTIONS=--openssl-legacy-provider encore dev-server",
+        "dev": "set NODE_OPTIONS=--openssl-legacy-provider encore dev",
+        "watch": " encore dev --watch",
+        "build": "set NODE_OPTIONS=--openssl-legacy-provider encore production --progress",
         "start-ws": "node --env-file=.env.local nodejs"
     },
     "dependencies": {
