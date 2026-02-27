@@ -95,6 +95,7 @@ class RepeaterController extends JitsiAdminController
     public function editRepeater(ParameterBagInterface $parameterBag, Request $request, RepeaterService $repeaterService, RoomAddService $roomAddService): Response
     {
         $repeater = $this->doctrine->getRepository(Repeat::class)->find($request->get('repeat'));
+        $uid = $repeater->getUid();
         if (!UtilsHelper::isAllowedToOrganizeRoom($this->getUser(), $repeater->getPrototyp())) {
             throw new NotFoundHttpException('Not found');
         }
@@ -106,6 +107,9 @@ class RepeaterController extends JitsiAdminController
 
             if ($form->isSubmitted() && $form->isValid()) {
                 $repeater = $form->getData();
+                /**
+                 * @var Repeat $repeater
+                 */
                 if (!$repeaterService->checkData($repeater)) {
                     $snack = $this->translator->trans('Fehler, Bitte füllen Sie alle Felder aus');
                     $this->addFlash('danger', $snack);
@@ -117,6 +121,7 @@ class RepeaterController extends JitsiAdminController
                     return $this->redirectToRoute('dashboard');
                 }
                 $em = $this->doctrine->getManager();
+                $repeater->setUid($uid);
                 $em->persist($repeater);
                 $em->flush();
                 $repeater = $repeaterService->cleanRepeater($repeater);
