@@ -73,3 +73,4 @@ Nothing
 # Get more information about updates
 * You can use the **Github Notification** via E-Mail to get informed about new features in the next release
 * Sign up for the **Jitsi Admin Mailing-List**, which we send out: [Sign Up](https://lists.h2-invent.com/forms/nfrm_weLJnLY5)
+* Remove DOc Directory
