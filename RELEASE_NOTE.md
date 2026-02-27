@@ -40,7 +40,7 @@
 * fix api to move room to other server
 * remove langauges which are all over in the project
 * On user room removal, room is now correctly removed from users favorite list
-
+* Ical not working in google mail
 # Features, Improvements, and Bug Fixes related to the Livekit Integration
 ## 1.3
 Nothing
