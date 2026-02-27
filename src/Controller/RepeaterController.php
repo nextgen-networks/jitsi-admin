@@ -43,6 +43,9 @@ class RepeaterController extends JitsiAdminController
 
             if ($form->isSubmitted() && $form->isValid()) {
                 $repeater = $form->getData();
+                /**
+                 * @var Repeat $repeater
+                 */
                 if (!$repeaterService->checkData($repeater)) {
                     $snack = $this->translator->trans('Fehler, Bitte füllen Sie alle Felder aus');
                     $this->addFlash('danger', $snack);
@@ -61,9 +64,10 @@ class RepeaterController extends JitsiAdminController
                 $room->setPublic(false);
                 $em->persist($room);
                 $em->flush();
-
+                $repeater->setUid(md5(uniqid()));
                 $repeater->setPrototyp($room);
                 $repeater->setStartDate($room->getStart());
+
                 $em->persist($repeater);
                 $em->flush();
                 $repeaterService->cleanRepeater($repeater);
