@@ -17,7 +17,7 @@ class RepeaterService
     private $em;
     private $mailer;
 
-    private $icalService;
+
 
     private $translator;
     private $twig;
@@ -55,19 +55,20 @@ class RepeaterService
     ];
 
     public function __construct(
-        CallerPrepareService   $callerPrepareService,
-        IcalService            $icalService,
-        Environment            $environment,
-        TranslatorInterface    $translator,
-        MailerService          $mailerService,
-        EntityManagerInterface $entityManager,
+        CallerPrepareService            $callerPrepareService,
+
+        Environment                     $environment,
+        TranslatorInterface             $translator,
+        MailerService                   $mailerService,
+        EntityManagerInterface          $entityManager,
+        private JoinUrlGeneratorService $joinUrlGeneratorService,
     )
     {
         $this->em = $entityManager;
         $this->mailer = $mailerService;
         $this->translator = $translator;
         $this->twig = $environment;
-        $this->icalService = $icalService;
+
         $this->callerUserService = $callerPrepareService;
     }
 
@@ -105,7 +106,7 @@ class RepeaterService
         foreach ($userAttribute as $data) {
             $repeat->getPrototyp()->addUserAttribute($data);
         }
-        foreach ($repeat->getPrototyp()->getUser() as $data){
+        foreach ($repeat->getPrototyp()->getUser() as $data) {
             $repeat->getPrototyp()->addPrototypeUser($data);
         }
 
@@ -453,7 +454,8 @@ class RepeaterService
         }
         foreach ($users as $user) {
             $templateAttr['user'] = $user;
-            $ics = $this->createIcs($repeat, $user);
+            $ics = $this->createIcs($repeat, $user,$method);
+
             $attachement = [];
             $attachement[] = ['type' => 'text/calendar', 'filename' => $repeat->getPrototyp()->getName() . '.ics', 'body' => $ics];
             $this->mailer->sendEmail(
@@ -475,18 +477,101 @@ class RepeaterService
      * @return string
      * @author Emanuel Holzmann
      */
-    private function createIcs(Repeat $repeat, User $user): string
+    private function createIcs(Repeat $repeat, User $user, $method = 'REQUEST'): string
     {
-        $this->icalService->setRooms($repeat->getRooms()->toArray());
-        return $this->icalService->getIcalString($user);
+        $ics = new IcsService();
+        $rooms = $repeat->getRooms();
+        $rDate = [];
+        foreach ($rooms as $room) {
+            $rDate[] = $ics->toUtcZ($room->getStartUtc());
+        }
+        $rDateString = implode(',', $rDate);
+
+        if ($repeat->getPrototyp()->getModerator() === $user && $method !== 'CANCEL') {
+            $method = 'PUBLISH';
+
+        }
+        $ics->setMethod($method);
+
+        $description = $this->translator->trans('Sie wurden zu einer Videokonferenz hinzugefügt.') .
+            '\n\n' .
+            $this->translator->trans('Jede Konferenz hat einen eigenen Link den Sie zum beitreten anklicken müssen.');
+
+        //this is the main event and holds all the Rdate.
+        // The Rdates will be overwritten by the individall elements
+
+        $ics->addEvent(
+            [
+                'uid' => md5($repeat->getUid()) . '@' . parse_url($repeat->getPrototyp()->getHostUrl(), PHP_URL_HOST),
+                'location' => $this->translator->trans('meetling Konferenz'),
+                'description' => $description,
+                'dtstart' => $repeat->getRooms()->first()->getStartUtc(),
+                'dtend' => $repeat->getRooms()->first()->getEndDateUtc(),
+                'summary' => $repeat->getPrototyp()->getName(),
+                'sequence' => $repeat->getPrototyp()->getSequence(),
+                'organizer' => 'MAILTO:' . $repeat->getPrototyp()->getModerator()->getEmail(),
+                'attendee' => $user->getEmail(),
+                'transp' => 'OPAQUE',
+                'rdate' => $rDateString,
+                'url' => $repeat->getPrototyp()->getHostUrl(),
+                'class' => 'public'
+            ]
+        );
+
+
+        foreach ($repeat->getRooms() as $room) {
+            $description = $this->createDescription($room, $user);
+            $url = $this->joinUrlGeneratorService->generateUrl($room, $user);
+            $ics->addEvent(
+                [
+                    'uid' => md5($repeat->getUid()) . '@' . parse_url($repeat->getPrototyp()->getHostUrl(), PHP_URL_HOST),
+                    'location' => $this->translator->trans('meetling Konferenz'),
+                    'description' => $description,
+                    'dtstart' => $room->getStartUtc(),
+                    'dtend' => $room->getEndDateUtc(),
+                    'summary' => $room->getName(),
+                    'sequence' => $repeat->getPrototyp()->getSequence(),
+                    'organizer' => 'MAILTO:' . $repeat->getPrototyp()->getModerator()->getEmail(),
+                    'attendee' => $user->getEmail(),
+                    'transp' => 'OPAQUE',
+                    'url' => $url,
+                    'class' => 'public',
+                    'recurrence-id' => $ics->toUtcZ($room->getStartUtc()),
+                ]
+            );
+
+        }
+
+
+        return $ics->toString();
+
     }
+
+    private function createDescription(Rooms $rooms, User $user)
+    {
+
+        $url = $this->joinUrlGeneratorService->generateUrl($rooms, $user);
+        return $this->translator->trans('Sie wurden zu einer Videokonferenz eingeladen.') .
+            '\n\n' .
+            $this->translator->trans('Über den beigefügten Link können Sie ganz einfach zur Videokonferenz beitreten.\nName: {name} \nModerator: {moderator} ', ['{name}' => $rooms->getName(), '{moderator}' => $rooms->getModerator()->getFirstName() . ' ' . $rooms->getModerator()->getLastName()])
+            . ($rooms->getAgenda() ? '\n\n' . $this->translator->trans('Agenda') . ':\n' . implode('\n', explode("\r\n", $rooms->getAgenda())) . '\n\n' : '\n\n') .
+            $this->translator->trans('Folgende Daten benötigen Sie um der Konferenz beizutreten:\nKonferenz ID: {id} \nIhre E-Mail-Adresse: {email}', ['{id}' => $rooms->getUid(), '{email}' => $user->getEmail()])
+            . '\n\n' .
+            $url .
+            '\n\n' .
+            $this->translator->trans('Sie erhalten diese E-Mail, weil Sie zu einer Videokonferenz eingeladen wurden.');
+
+
+    }
+
 
     /**
      *
      * @param Repeat $repeat
      * @author Emanuel Holzmann
      */
-    public function addUserRepeat(Repeat $repeat)
+    public
+    function addUserRepeat(Repeat $repeat)
     {
         $prototype = $repeat->getPrototyp();
         foreach ($repeat->getRooms() as $data) {//iterate over all rooms in the series
@@ -525,7 +610,8 @@ class RepeaterService
      * @return bool
      * @author Emanuel Holzmann
      */
-    public function checkData(Repeat $repeat): bool
+    public
+    function checkData(Repeat $repeat): bool
     {
         switch ($repeat->getRepeatType()) {
             case 0:
@@ -578,7 +664,8 @@ class RepeaterService
      * @param Repeat $repeater
      * @return Repeat
      */
-    public function cleanRepeater(Repeat $repeater)
+    public
+    function cleanRepeater(Repeat $repeater)
     {
 
         if ($repeater->getPrototyp()->getCallerRoom()) {
@@ -624,7 +711,8 @@ class RepeaterService
      * @return void
      * This Function creates the caller Id for each Room which is generated in the Repeater Session
      */
-    public function createNewCaller(Repeat $repeat)
+    public
+    function createNewCaller(Repeat $repeat)
     {
         foreach ($repeat->getRooms() as $data) {
             $this->callerUserService->addCallerIdToRoom($data);

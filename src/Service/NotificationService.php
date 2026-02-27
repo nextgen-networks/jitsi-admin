@@ -20,16 +20,15 @@ use Twig\Environment;
 class NotificationService
 {
     private $mailer;
-    private $parameterBag;
+
     private $ics;
-    private $twig;
+
     private $translator;
     private $jigasiService;
-    public function __construct(MailerService $mailerService, ParameterBagInterface $parameterBag, IcsService $icsService, Environment $environment, TranslatorInterface $translator, JigasiService $jigasiService)
+    public function __construct(MailerService $mailerService, TranslatorInterface $translator, JigasiService $jigasiService)
     {
         $this->mailer = $mailerService;
-        $this->parameterBag = $parameterBag;
-        $this->twig = $environment;
+
         $this->translator = $translator;
         $this->jigasiService = $jigasiService;
     }
@@ -37,17 +36,15 @@ class NotificationService
     function createIcs(Rooms $rooms, User $user, $url, $method = 'REQUEST')
     {
         $this->ics = new IcsService();
+
+        if ($rooms->getModerator() === $user && $method!=='CANCEL') {
+            $method = 'PUBLISH';
+
+        }
         $this->ics->setMethod($method);
-        if ($rooms->getModerator() !== $user) {
-            $organizer = $rooms->getModerator()->getEmail();
-        } else {
-            $organizer = 'moderator' . '@' . 'jitsi-admin' . '.de';
-            $this->ics->setIsModerator(true);
-        }
-        $this->ics->setTimezoneStart(clone($rooms->getStart()));
-        if ($user->getTimeZone()) {
-            $this->ics->setTimezoneId($user->getTimeZone());
-        }
+        $organizer = $rooms->getModerator()->getEmail();
+
+
         $description = $this->translator->trans('Sie wurden zu einer Videokonferenz auf dem Jitsi Server {server} hinzugefügt.', ['{server}' => $rooms->getServer()->getServerName()]) .
             '\n\n' .
             $this->translator->trans('Über den beigefügten Link können Sie ganz einfach zur Videokonferenz beitreten.\nName: {name} \nModerator: {moderator} ', ['{name}' => $rooms->getName(), '{moderator}' => $rooms->getModerator()->getFirstName() . ' ' . $rooms->getModerator()->getLastName()])
@@ -70,18 +67,19 @@ class NotificationService
             }
         }
 
-        $this->ics->add(
+        $this->ics->addEvent(
             [
-                'uid' => md5($rooms->getUid()),
-                'location' => $this->translator->trans('Jitsi Konferenz'),
+                'uid' => md5($rooms->getUid()).'@'.parse_url($rooms->getHostUrl(), PHP_URL_HOST),
+                'location' => $this->translator->trans('meetling'),
                 'description' => $description,
-                'dtstart' => $rooms->getStartwithTimeZone($user)->format('Ymd') . "T" . $rooms->getStartwithTimeZone($user)->format("His"),
-                'dtend' => $rooms->getEndwithTimeZone($user)->format('Ymd') . "T" . $rooms->getEndwithTimeZone($user)->format("His"),
+                'dtstart' => $rooms->getStartUtc(),
+                'dtend' => $rooms->getEndDateUtc(),
                 'summary' => $rooms->getName(),
                 'sequence' => $rooms->getSequence(),
                 'organizer' => 'MAILTO:' . $organizer,
                 'attendee' => $user->getEmail(),
-                'transport' => 'opaque',
+                'transp' => 'OPAQUE',
+                'url'=>$url,
                 'class' => 'public'
             ]
         );
