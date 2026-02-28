@@ -4,6 +4,7 @@ namespace App\Service\livekit;
 
 use App\Entity\Rooms;
 use App\Entity\Server;
+use App\Service\LivekitRoomNameGenerator;
 use Firebase\JWT\JWT;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -19,7 +20,9 @@ class SipTrunkGenerator
 
     public function __construct(
         private HttpClientInterface $httpClient,
-        private LoggerInterface     $logger)
+        private LoggerInterface     $logger,
+        private LivekitRoomNameGenerator $livekitRoomNameGenerator
+    )
     {
     }
 
@@ -72,14 +75,12 @@ class SipTrunkGenerator
         $this->sipTrunkNumber = (new \DateTime())->format('U').rand(10, 99);
         $payload = [
             'trunk' => [
-                'name' => $rooms->getUid(),
+                'name' => $this->livekitRoomNameGenerator->getLiveKitName($rooms),
                 'numbers' => [
                     $this->sipTrunkNumber
-                ],
-                'allowed_numbers' => [$callerId],
+                ]
             ]
         ];
-
         try {
             $response = $this->sendPostRequest($server, 'twirp/livekit.SIP/CreateSIPInboundTrunk', $payload);
             if (isset($response[self::SIP_TRUNK_ID])) {
@@ -102,7 +103,7 @@ class SipTrunkGenerator
             "hide_phone_number" => false,
             "rule" => [
                 "dispatchRuleDirect" => [
-                    "roomName" => $this->rooms->getUid(),
+                    "roomName" => $this->livekitRoomNameGenerator->getLiveKitName($this->rooms),
                     "pin" => ""
                 ]
             ]

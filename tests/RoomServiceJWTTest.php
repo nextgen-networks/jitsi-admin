@@ -93,7 +93,7 @@ class RoomServiceJWTTest extends KernelTestCase
                 'aud' => 'jitsi_admin',
                 'iss' => 'testID',
                 'sub' => 'testLivekit.de',
-                'room' => 'testuid',
+                'room' => 'testuid@localhost:8000',
                 'context' =>
                     [
                         'user' =>
@@ -101,6 +101,9 @@ class RoomServiceJWTTest extends KernelTestCase
                                 'name' => 'Testuser',
                                 'identity' => $payload['context']['user']['identity']
                             ),
+                        'room'=>[
+                            'name'=>'testRoom'
+                        ]
                     ],
                 'livekit' =>
                     [
@@ -197,7 +200,7 @@ class RoomServiceJWTTest extends KernelTestCase
                 'aud' => 'jitsi_admin',
                 'iss' => 'testID',
                 'sub' => 'testLivekit.de',
-                'room' => 'testuid',
+                'room' => 'testuid@localhost:8000',
                 'backgroundImages'=>[
                     [
                         'description'=>'Im Land',
@@ -219,6 +222,9 @@ class RoomServiceJWTTest extends KernelTestCase
                                 'identity' => $payload['context']['user']['identity'],
                                 'name' => 'Testuser',
                             ),
+                        'room'=>[
+                            'name'=>'testRoom'
+                        ]
                     ],
                 'livekit' =>
                     [
@@ -286,7 +292,7 @@ class RoomServiceJWTTest extends KernelTestCase
                 'aud' => 'jitsi_admin',
                 'iss' => 'testID',
                 'sub' => 'testLivekit.de',
-                'room' => 'testuid',
+                'room' => 'testuid@localhost:8000',
                 'context' =>
                     [
                         'user' =>
@@ -296,6 +302,9 @@ class RoomServiceJWTTest extends KernelTestCase
                                 'identity' => $payload['context']['user']['identity'],
 
                             ),
+                        'room'=>[
+                            'name'=>'testRoom'
+                        ]
                     ],
                 'livekit' =>
                     [
@@ -350,7 +359,7 @@ invalidKey
                 'aud' => 'jitsi_admin',
                 'iss' => 'testID',
                 'sub' => 'testLivekit.de',
-                'room' => 'testuid',
+                'room' => 'testuid@localhost:8000',
                 'context' =>
                     [
                         'user' =>
@@ -358,6 +367,9 @@ invalidKey
                                 'name' => 'Testuser',
                                 'identity' => $payload['context']['user']['identity'],
                             ),
+                        'room'=>[
+                            'name'=>'testRoom'
+                        ]
                     ],
                 'livekit' =>
                     [

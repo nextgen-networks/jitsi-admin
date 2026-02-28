@@ -79,6 +79,7 @@ class DashboardController extends JitsiAdminController
                 ],
             );
         }
+
         $roomsFuture = $this->doctrine->getRepository(Rooms::class)->findRoomsInFuture($this->getUser());
 
         $r = [];
@@ -171,7 +172,7 @@ class DashboardController extends JitsiAdminController
         if (!$request->isXmlHttpRequest()) {
             if ($this->themeService->getApplicationProperties('SECURITY_ALLLOW_UPLOAD_THEME_GROUP') !== '') {
                 $groups = $this->getUser()->getGroups();
-                if (in_array($this->themeService->getApplicationProperties('SECURITY_ALLLOW_UPLOAD_THEME_GROUP'), $groups)) {
+                if ($groups && in_array($this->themeService->getApplicationProperties('SECURITY_ALLLOW_UPLOAD_THEME_GROUP'), $groups)) {
                     $this->themeService->checkRemainingDays();
                 }
             } else {
@@ -180,6 +181,14 @@ class DashboardController extends JitsiAdminController
 
 
         }
+        $res->headers->setCookie(
+            Cookie::create(
+                'is_loggedIn_user',
+                1,
+                time() + (2 * 365 * 24 * 60 * 60),
+                '/',      // Path.
+            )
+        );
         return $res;
     }
 

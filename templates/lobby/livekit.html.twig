@@ -186,7 +186,7 @@
     {% if name is defined and name is not null %}
 
         <script>
-            var livekitUrl = '{{ room.server.livekitMiddlewareUrl?:LIVEKIT_BASE_URL }}/meetling/room/{{ room.uid }}?jwt={{ jwtFromRoom(user,room,name) }}&secret={{ generateEncryptedSecret(room) }}';
+            var livekitUrl = '{{ room.server.livekitMiddlewareUrl?:LIVEKIT_BASE_URL }}/meetling/room/{{ getLiveKitName(room)  }}?jwt={{ jwtFromRoom(user,room,name) }}&secret={{ generateEncryptedSecret(room) }}';
             const displayName = '{{ name }}';
             var hangupQuestion = "{{ 'lobby.endMeeting.ask'|trans }}";
             var endMeetingUrl = "{{ path('lobby_Moderator_endMeeting',{'roomUid':room.uidReal}) }}";
@@ -212,13 +212,13 @@
                 'lobby_moderator/'~room.uidReal,
                 'lobby_broadcast_websocket/'~ room.uidReal,
                 'lobby_personal'~room.uidReal~app.user.uid,
-                'whiteboard/'~room.uidReal
+                room.uidReal
             ] %}
             {% else %}
             {% set topics =[
                 'lobby_moderator/'~room.uidReal,
                 'lobby_broadcast_websocket/'~ room.uidReal,
-                'whiteboard/'~room.uidReal
+                room.uidReal
             ] %}
             {% endif %}
             var topic ={{ mercure(topics)|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_HEX_TAG'))|raw }};
