@@ -2415,11 +2415,11 @@
       </trans-unit>
       <trans-unit id="n2SdnDl" resname="meetling Konferenz">
         <source>meetling Konferenz</source>
-        <target state="needs-translation">meetling Konferenz</target>
+        <target state="translated">meetling conference</target>
       </trans-unit>
       <trans-unit id="uFBYrBR" resname="meetling">
         <source>meetling</source>
-        <target state="needs-translation">meetling</target>
+        <target state="translated">meetling</target>
       </trans-unit>
       <trans-unit id="JmOALRn" resname="Sie wurden zu einer Videokonferenz hinzugefügt.">
         <source>Sie wurden zu einer Videokonferenz hinzugefügt.</source>
