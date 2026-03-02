@@ -13,14 +13,19 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class OwnRoomJoinTest extends WebTestCase
-{
     public function test_hasStart_toearly_noModerator_no_Lobby(): void
     {
         $client = static::createClient();
         $room = $this->getRoomByName('Room with Start and no Participants list');
+        
+        // Fix: Startdatum dynamisch in die Zukunft setzen
+        $room->setStart((new \DateTime())->modify('+2 hours'));
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($room);
+        $em->flush();
+        
         $crawler = $client->request('GET', '/myRoom/start/' . $room->getUid());
         $urlGen = $this->getContainer()->get(UrlGeneratorInterface::class);
-
         $url = $urlGen->generate('join_index_no_slug', ['snack' => 'Der Beitritt ist nur von ' . $room->getStart()->modify('-30min')->format('d.m.Y H:i T') . ' bis ' . $room->getEnddate()->format('d.m.Y H:i T') . ' möglich']);
         self::assertTrue($client->getResponse()->isRedirect());
     }
@@ -67,7 +72,22 @@ class OwnRoomJoinTest extends WebTestCase
     public function test_hasStart_waitingTime_noModerator_no_Lobby_toWaitingSite(): void
     {
         $client = static::createClient();
-        $room = $this->getRoomByName('Room with Start and no Participants list');
+        $room = $this->getRoomByName('Room with Start and no Participants lpublic function test_hasStart_toearly_noModerator_no_Lobby(): void
+{
+    $client = static::createClient();
+    $room = $this->getRoomByName('Room with Start and no Participants list');
+    
+    // Fix: Startdatum dynamisch in die Zukunft setzen
+    $room->setStart((new \DateTime())->modify('+2 hours'));
+    $em = self::getContainer()->get(EntityManagerInterface::class);
+    $em->persist($room);
+    $em->flush();
+    
+    $crawler = $client->request('GET', '/myRoom/start/' . $room->getUid());
+    $urlGen = $this->getContainer()->get(UrlGeneratorInterface::class);
+    $url = $urlGen->generate('join_index_no_slug', ['snack' => 'Der Beitritt ist nur von ' . $room->getStart()->modify('-30min')->format('d.m.Y H:i T') . ' bis ' . $room->getEnddate()->format('d.m.Y H:i T') . ' möglich']);
+    self::assertTrue($client->getResponse()->isRedirect());
+}ist');
         $room->setStart((new \DateTime())->modify('+15min'));
         $server = $room->getServer();
         $em = self::getContainer()->get(EntityManagerInterface::class);
