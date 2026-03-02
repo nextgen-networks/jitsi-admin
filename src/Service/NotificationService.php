@@ -45,24 +45,24 @@ class NotificationService
         $organizer = $rooms->getModerator()->getEmail();
 
 
-        $description = $this->translator->trans('Sie wurden zu einer Videokonferenz auf dem Jitsi Server {server} hinzugefügt.', ['{server}' => $rooms->getServer()->getServerName()]) .
-            '\n\n' .
-            $this->translator->trans('Über den beigefügten Link können Sie ganz einfach zur Videokonferenz beitreten.\nName: {name} \nModerator: {moderator} ', ['{name}' => $rooms->getName(), '{moderator}' => $rooms->getModerator()->getFirstName() . ' ' . $rooms->getModerator()->getLastName()])
-            . ($rooms->getAgenda() ? '\n\n' . $this->translator->trans('Agenda') . ':\n' . implode('\n', explode("\r\n", $rooms->getAgenda())) . '\n\n' : '\n\n') .
-            $this->translator->trans('Folgende Daten benötigen Sie um der Konferenz beizutreten:\nKonferenz ID: {id} \nIhre E-Mail-Adresse: {email}', ['{id}' => $rooms->getUid(), '{email}' => $user->getEmail()])
-            . '\n\n' .
+        $description = $this->translator->trans("Sie wurden zu einer Videokonferenz eingeladen.") .
+            "\n\n" .
+            $this->translator->trans("Über den beigefügten Link können Sie ganz einfach zur Videokonferenz beitreten.\nName: {name} \nModerator: {moderator} ", ["{name}" => $rooms->getName(), "{moderator}" => $rooms->getModerator()->getFirstName() . " " . $rooms->getModerator()->getLastName()])
+            . ($rooms->getAgenda() ? "\n\n" . $this->translator->trans("Agenda") . ":\n" . implode("\n", explode("\r\n", $rooms->getAgenda())) . "\n\n" : "\n\n") .
+            $this->translator->trans("Folgende Daten benötigen Sie um der Konferenz beizutreten:\nKonferenz ID: {id} \nIhre E-Mail-Adresse: {email}", ["{id}" => $rooms->getUid(), "{email}" => $user->getEmail()])
+            . "\n\n" .
             $url .
-            '\n\n' .
-            $this->translator->trans('Sie erhalten diese E-Mail, weil Sie zu einer Videokonferenz eingeladen wurden.');
+            "\n\n" .
+            $this->translator->trans("Sie erhalten diese E-Mail, weil Sie zu einer Videokonferenz eingeladen wurden.");
 
 
         if ($this->jigasiService->getRoomPin($rooms) && $this->jigasiService->getNumber($rooms)) {
-            $description = $description . '\n\n\n' . $this->translator->trans('email.sip.text') . '\n';
+            $description = $description . "\n\n\n" . $this->translator->trans("email.sip.text") . "\n";
 
             foreach ($this->jigasiService->getNumber($rooms) as $key => $value) {
                 foreach ($value as $data) {
                     $description = $description
-                        . sprintf('(%s) %s %s: %s# (%s,,%s#) \n', $key, $data, $this->translator->trans('email.sip.pin'), $this->jigasiService->getRoomPin($rooms), $data, $this->jigasiService->getRoomPin($rooms));
+                        . sprintf("(%s) %s %s: %s# (%s,,%s#) \n", $key, $data, $this->translator->trans("email.sip.pin"), $this->jigasiService->getRoomPin($rooms), $data, $this->jigasiService->getRoomPin($rooms));
                 }
             }
         }

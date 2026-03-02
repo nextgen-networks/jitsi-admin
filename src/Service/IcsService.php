@@ -151,7 +151,7 @@ class IcsService
             if (!empty($e['recurrence-id'])) $lines[] = 'RECURRENCE-ID:' . $e['recurrence-id'];
             // Common optional
             if (!empty($e['location']))    $lines[] = 'LOCATION:' . $this->escapeText($e['location']);
-            if (!empty($e['description'])) $lines[] = 'DESCRIPTION:' . $e['description'];
+            if (!empty($e['description'])) $lines[] = 'DESCRIPTION:' . $this->escapeText($e['description']);
             if (isset($e['sequence']))     $lines[] = 'SEQUENCE:' . $e['sequence'];
             if (!empty($e['status']))      $lines[] = 'STATUS:' . $e['status'];
             if (!empty($e['class']))       $lines[] = 'CLASS:' . $e['class'];
