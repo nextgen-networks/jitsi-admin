@@ -19,7 +19,6 @@ class OwnRoomJoinTest extends WebTestCase
         $client = static::createClient();
         $room = $this->getRoomByName('Room with Start and no Participants list');
     
-        // Fix: Startdatum dynamisch in die Zukunft setzen
         $room->setStart((new \DateTime())->modify('+2 hours'));
         $em = self::getContainer()->get(EntityManagerInterface::class);
         $em->persist($room);
