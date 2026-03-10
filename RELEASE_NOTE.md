@@ -44,6 +44,7 @@
 * escape Agenda corecly
 * Features, Improvements, and Bug Fixes related to the Livekit Integration
 * When edit a conference the agenda field was rendered empty
+* Fis Server Statistics
 
 ## 1.3
 Nothing
