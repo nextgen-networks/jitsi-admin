@@ -77,6 +77,8 @@ class NotificationService
                 'summary' => $rooms->getName(),
                 'sequence' => $rooms->getSequence(),
                 'organizer' => 'MAILTO:' . $organizer,
+                'organizerEmail'=>$rooms->getModerator()->getEmail(),
+                'organizerName'=>$rooms->getModerator()->getFirstName() .' '. $rooms->getModerator()->getLastName(),
                 'attendee' => $user->getEmail(),
                 'transp' => 'OPAQUE',
                 'url'=>$url,
