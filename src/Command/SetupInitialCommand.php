@@ -46,7 +46,7 @@ class SetupInitialCommand extends Command
         if (!$this->filesystem->exists($this->jsonFileLocation)) {
             $io->error("Could not find setup file at `{$this->jsonFileLocation}`");
 
-            return Command::FAILURE;
+            return Command::SUCCESS;
         }
 
         try {
